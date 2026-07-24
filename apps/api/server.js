@@ -264,10 +264,11 @@ app.post('/api/auth/signup', async (req, res) => {
     try {
         await pool.query('BEGIN');
         
-        // 1. Create a new Tenant (Law Firm)
+        // 1. Create a new Tenant (Law Firm) with URL-safe slug
+        const slug = firmName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
         const tenantRes = await pool.query(
-            'INSERT INTO tenants (name) VALUES ($1) RETURNING id',
-            [firmName]
+            'INSERT INTO tenants (name, slug) VALUES ($1, $2) RETURNING id',
+            [firmName, slug]
         );
         const tenantId = tenantRes.rows[0].id;
 
