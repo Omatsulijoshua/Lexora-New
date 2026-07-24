@@ -1,0 +1,7 @@
+{
+  "name": "@lexora/shared",
+  "version": "1.0.0",
+  "description": "Shared Lexora assets and utilities",
+  "main": "index.js",
+  "private": true
+}

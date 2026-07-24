@@ -1,0 +1,18 @@
+services:
+  - type: web
+    name: lexora-api
+    runtime: node
+    plan: free
+    buildCommand: npm install && npx prisma generate --schema=packages/database/prisma/schema.prisma
+    startCommand: node apps/api/server.js
+    envVars:
+      - key: DATABASE_URL
+        value: "" # Provide your live Neon PostgreSQL Connection String in Render dashboard env settings
+      - key: JWT_SECRET
+        generateValue: true # Render will generate a secure random string for signing sessions
+      - key: STRIPE_SECRET_KEY
+        value: "sk_test_mock_stripe_key_placeholder"
+      - key: OPENAI_API_KEY
+        value: "mock_openai_api_key_placeholder" # Use this if GROQ_API_KEY is not defined
+      - key: GROQ_API_KEY
+        value: "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" # Your Groq API Key

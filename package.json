@@ -1,0 +1,23 @@
+{
+  "name": "lexora-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Lexora Multi-Tenant Law Firm SaaS Platform Monorepo",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev:web": "npm run dev --workspace=@lexora/web",
+    "dev:api": "npm run dev --workspace=@lexora/api",
+    "build": "turbo run build",
+    "test": "turbo run test",
+    "lint": "turbo run lint",
+    "db:migrate": "npm run migrate --workspace=@lexora/database",
+    "db:seed": "npm run seed --workspace=@lexora/database",
+    "db:generate": "npm run generate --workspace=@lexora/database"
+  },
+  "devDependencies": {
+    "turbo": "^2.0.4"
+  }
+}

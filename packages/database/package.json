@@ -1,0 +1,20 @@
+{
+  "name": "@lexora/database",
+  "version": "1.0.0",
+  "description": "Prisma client and migrations for Lexora",
+  "main": "index.js",
+  "private": true,
+  "scripts": {
+    "generate": "prisma generate",
+    "migrate": "prisma db push",
+    "seed": "node seed.js"
+  },
+  "dependencies": {
+    "@prisma/client": "^5.16.0",
+    "bcryptjs": "^2.4.3",
+    "dotenv": "^16.4.5"
+  },
+  "devDependencies": {
+    "prisma": "^5.16.0"
+  }
+}

@@ -1,0 +1,222 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// 1. Tenants / Organizations Table
+model Tenant {
+  id           Int           @id @default(autoincrement())
+  name         String        @unique
+  status       String        @default("Active")
+  slug         String        @unique
+  maxUsers     Int           @default(10) @map("max_users")
+  maxCases     Int           @default(100) @map("max_cases")
+  aiEnabled    Boolean       @default(true) @map("ai_enabled")
+  createdAt    DateTime      @default(now()) @map("created_at")
+  users        User[]
+  clients      Client[]
+  cases        Case[]
+  invoices     Invoice[]
+  contracts    Contract[]
+  appointments Appointment[]
+  firmDetails  FirmDetails?
+  auditLogs    AuditLog[]
+  aiUsages     AiUsage[]
+  messages     Message[]
+  paymentLogs  PaymentLog[]
+
+  @@map("tenants")
+}
+
+// 2. Users Table (Authentication)
+model User {
+  id                  Int           @id @default(autoincrement())
+  email               String        @unique
+  passwordHash        String        @map("password_hash")
+  role                String        // 'lawyer', 'client', 'admin', 'partner', 'paralegal', 'receptionist', 'accountant', 'hr'
+  clientName          String?       @map("client_name") // Links to client name if role is 'client'
+  tenantId            Int           @map("tenant_id")
+  tenant              Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  createdAt           DateTime      @default(now()) @map("created_at")
+  status              String        @default("Active") // 'Active', 'Suspended'
+  twoFactorEnabled    Boolean       @default(false) @map("two_factor_enabled")
+  twoFactorSecret     String?       @map("two_factor_secret")
+  twoFactorBackupCodes String?       @map("two_factor_backup_codes")
+  failedAttempts      Int           @default(0) @map("failed_attempts")
+  lockoutUntil        DateTime?     @map("lockout_until")
+  auditLogs           AuditLog[]
+  sessions            UserSession[]
+
+  @@map("users")
+}
+
+// 3. Clients Table (Isolated by Tenant)
+model Client {
+  id        Int      @id @default(autoincrement())
+  name      String
+  email     String
+  practice  String
+  balance   Int      @default(0)
+  status    String   @default("Active") // 'Active', 'Inactive'
+  tenantId  Int      @map("tenant_id")
+  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@unique([name, tenantId])
+  @@map("clients")
+}
+
+// 4. Cases / Matters Table (Isolated by Tenant)
+model Case {
+  id        Int      @id @default(autoincrement())
+  title     String
+  client    String
+  stage     String   @default("intake") // 'intake', 'research', 'drafting', 'closed', etc.
+  priority  String   @default("Mid") // 'High', 'Mid', 'Low'
+  attorney  String   @default("You")
+  tenantId  Int      @map("tenant_id")
+  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("cases")
+}
+
+// 5. Invoices Table (Isolated by Tenant)
+model Invoice {
+  id          Int      @id @default(autoincrement())
+  client      String
+  date        String
+  description String   @db.Text
+  amount      Decimal  @db.Decimal(10, 2)
+  hours       Decimal  @db.Decimal(5, 2)
+  status      String   @default("Unpaid") // 'Paid', 'Unpaid', 'Overdue', 'Cancelled'
+  tenantId    Int      @map("tenant_id")
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  @@map("invoices")
+}
+
+// 6. Contracts / Documents Table (Isolated by Tenant)
+model Contract {
+  id        Int      @id @default(autoincrement())
+  client    String
+  title     String
+  type      String   // 'nda', 'retainer', etc.
+  status    String   @default("Draft") // 'Draft', 'Signed', 'Under Review'
+  content   String   @db.Text
+  tenantId  Int      @map("tenant_id")
+  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("contracts")
+}
+
+// 7. Appointments Table (Isolated by Tenant)
+model Appointment {
+  id        Int      @id @default(autoincrement())
+  client    String
+  title     String
+  date      String
+  time      String
+  type      String   @default("Consultation")
+  tenantId  Int      @map("tenant_id")
+  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("appointments")
+}
+
+// 8. Firm Details / Settings Table (Isolated by Tenant)
+model FirmDetails {
+  id        Int      @id @default(autoincrement())
+  firm      String
+  practice  String
+  address   String
+  phone     String
+  email     String
+  tenantId  Int      @unique @map("tenant_id")
+  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("firm_details")
+}
+
+// 9. Audit Logs Table (For security monitoring)
+model AuditLog {
+  id        Int      @id @default(autoincrement())
+  userId    Int?     @map("user_id")
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  action    String
+  details   String   @db.Text
+  tenantId  Int      @map("tenant_id")
+  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("audit_logs")
+}
+
+// 10. AI Usage Logs
+model AiUsage {
+  id         Int      @id @default(autoincrement())
+  tenantId   Int      @map("tenant_id")
+  tenant     Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tokensUsed Int      @map("tokens_used")
+  cost       Decimal  @db.Decimal(10, 4)
+  feature    String   // 'draft', 'summary', etc.
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  @@map("ai_usages")
+}
+
+// 11. User Sessions Table (Security & Session management)
+model UserSession {
+  id         Int      @id @default(autoincrement())
+  userId     Int      @map("user_id")
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash  String   @unique @map("token_hash")
+  ipAddress  String?  @map("ip_address")
+  userAgent  String?  @map("user_agent")
+  device     String?
+  browser    String?
+  os         String?
+  lastActive DateTime @default(now()) @map("last_active")
+  isRevoked  Boolean  @default(false) @map("is_revoked")
+  expiresAt  DateTime @map("expires_at")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  @@map("user_sessions")
+}
+
+// 12. Secure Messages Table (Client-Lawyer Communication)
+model Message {
+  id             Int      @id @default(autoincrement())
+  tenantId       Int      @map("tenant_id")
+  tenant         Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  senderEmail    String   @map("sender_email")
+  senderName     String   @map("sender_name")
+  recipientEmail String   @map("recipient_email")
+  content        String
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  @@map("secure_messages")
+}
+
+// 13. Payment Transaction Logs (Isolated by Tenant)
+model PaymentLog {
+  id             Int      @id @default(autoincrement())
+  tenantId       Int      @map("tenant_id")
+  tenant         Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  invoiceId      Int?     @map("invoice_id")
+  client         String
+  amount         Decimal  @db.Decimal(10, 2)
+  transactionRef String   @map("transaction_ref")
+  note           String?
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  @@map("payment_logs")
+}
