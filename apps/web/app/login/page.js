@@ -48,7 +48,8 @@ export default function LoginPage() {
     e.preventDefault();
     triggerToast("Authorizing session with secure node...");
 
-    fetch("/api/auth/login", {
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL || "https://lexora-new.onrender.com";
+    fetch(`${baseUrl}/api/auth/login`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email: loginEmail, password: loginPassword })
@@ -94,7 +95,8 @@ export default function LoginPage() {
     e.preventDefault();
     triggerToast("Verifying 2FA authenticator token...");
 
-    fetch("/api/auth/2fa/login", {
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL || "https://lexora-new.onrender.com";
+    fetch(`${baseUrl}/api/auth/2fa/login`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ tempToken, code: twoFactorCode })
@@ -132,7 +134,8 @@ export default function LoginPage() {
     e.preventDefault();
     triggerToast("Provisioning firm database workspace...");
 
-    fetch("/api/auth/signup", {
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL || "https://lexora-new.onrender.com";
+    fetch(`${baseUrl}/api/auth/signup`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ firmName: signupFirm, email: signupEmail, password: signupPassword })

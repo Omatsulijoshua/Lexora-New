@@ -129,8 +129,10 @@ export default function LawyerDashboard() {
     }, options.headers || {});
     
     const secureOptions = Object.assign({}, options, { headers });
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL || "https://lexora-new.onrender.com";
+    const targetUrl = url.startsWith("/api/") ? `${baseUrl}${url}` : url;
     
-    const res = await fetch(url, secureOptions);
+    const res = await fetch(targetUrl, secureOptions);
     const data = await res.json();
     if (res.status === 401 || res.status === 403) {
       sessionStorage.clear();

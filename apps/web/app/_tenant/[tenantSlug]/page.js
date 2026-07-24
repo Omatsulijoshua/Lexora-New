@@ -22,7 +22,8 @@ export default function TenantPublicWebsite() {
   useEffect(() => {
     if (!tenantSlug) return;
     
-    fetch(`/api/public/tenant?slug=${tenantSlug}`)
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL || "https://lexora-new.onrender.com";
+    fetch(`${baseUrl}/api/public/tenant?slug=${tenantSlug}`)
       .then(async res => {
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || "Workspace not found");

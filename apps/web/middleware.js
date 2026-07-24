@@ -26,7 +26,11 @@ export function middleware(request) {
     }
   } else {
     // For production: [tenant].lexora.app
-    if (domainParts.length > 2 && domainParts[0] !== 'www') {
+    // Avoid treating Vercel's default deployment subdomains as tenant subdomains
+    const isVercelPrimary = hostname.includes("vercel.app") && 
+      (domainParts[0].startsWith("lexora-new") || domainParts[0].includes("joshua-omatsuli") || domainParts[0].startsWith("lexora-gcirx4mzl"));
+
+    if (domainParts.length > 2 && domainParts[0] !== 'www' && !isVercelPrimary) {
       subdomain = domainParts[0];
     }
   }

@@ -57,9 +57,10 @@ export default function SuperAdminDashboard() {
     try {
       const headers = { "Authorization": `Bearer ${activeToken || token}` };
       
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL || "https://lexora-new.onrender.com";
       const [statsRes, tenantsRes] = await Promise.all([
-        fetch("/api/admin/stats", { headers }).then(res => res.json()),
-        fetch("/api/admin/tenants", { headers }).then(res => res.json())
+        fetch(`${baseUrl}/api/admin/stats`, { headers }).then(res => res.json()),
+        fetch(`${baseUrl}/api/admin/tenants`, { headers }).then(res => res.json())
       ]);
 
       if (statsRes.error || tenantsRes.error) {
@@ -84,7 +85,8 @@ export default function SuperAdminDashboard() {
   const handleStatusToggle = async (tenantId, currentStatus) => {
     const nextStatus = currentStatus === "Active" ? "Suspended" : "Active";
     try {
-      const res = await fetch(`/api/admin/tenants/${tenantId}/status`, {
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL || "https://lexora-new.onrender.com";
+      const res = await fetch(`${baseUrl}/api/admin/tenants/${tenantId}/status`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -104,7 +106,8 @@ export default function SuperAdminDashboard() {
 
   const handleImpersonate = async (tenantId) => {
     try {
-      const res = await fetch(`/api/admin/tenants/${tenantId}/impersonate`, {
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL || "https://lexora-new.onrender.com";
+      const res = await fetch(`${baseUrl}/api/admin/tenants/${tenantId}/impersonate`, {
         method: "POST",
         headers: { "Authorization": `Bearer ${token}` }
       });
@@ -137,7 +140,8 @@ export default function SuperAdminDashboard() {
   const handleSaveLimits = async (e) => {
     e.preventDefault();
     try {
-      const res = await fetch(`/api/admin/tenants/${selectedTenant.id}/limits`, {
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL || "https://lexora-new.onrender.com";
+      const res = await fetch(`${baseUrl}/api/admin/tenants/${selectedTenant.id}/limits`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
